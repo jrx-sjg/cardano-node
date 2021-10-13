@@ -5,6 +5,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 #if !defined(mingw32_HOST_OS)
 #define UNIX
@@ -58,9 +59,10 @@ import           Cardano.Tracing.Metrics (HasKESInfo (..), HasKESMetricsData (..
 
 import qualified Ouroboros.Consensus.Config as Consensus
 import           Ouroboros.Consensus.Config.SupportsNode (getNetworkMagic)
+import           Ouroboros.Consensus.Mempool.API (MempoolCapacityBytes (..))
 import           Ouroboros.Consensus.Node (DiffusionArguments (..), DiffusionTracers (..),
                    DnsSubscriptionTarget (..), IPSubscriptionTarget (..), RunNode, RunNodeArgs (..),
-                   StdRunNodeArgs (..))
+                   StdRunNodeArgs (..), MempoolCapacityBytesOverride (..))
 import qualified Ouroboros.Consensus.Node as Node (getChainDB, run)
 import           Ouroboros.Consensus.Node.ProtocolInfo
 import           Ouroboros.Consensus.Util.Orphans ()
@@ -93,6 +95,8 @@ runNode cmdPc = do
     nc <- case makeNodeConfiguration $ defaultPartialNodeConfiguration <> configYamlPc <> cmdPc of
             Left err -> panic $ "Error in creating the NodeConfiguration: " <> Text.pack err
             Right nc' -> return nc'
+
+    putStrLn $ "Node configuration: " <> show @_ @Text nc
 
     case shelleyVRFFile $ ncProtocolFiles nc of
       Just vrfFp -> do vrf <- runExceptT $ checkVRFFilePermissions vrfFp
@@ -283,15 +287,16 @@ handleSimpleNode scp runP trace nodeTracers nc onKernel = do
            onKernel nodeKernel
        }
      StdRunNodeArgs
-       { srnBfcMaxConcurrencyBulkSync   = unMaxConcurrencyBulkSync <$> ncMaxConcurrencyBulkSync nc
-       , srnBfcMaxConcurrencyDeadline   = unMaxConcurrencyDeadline <$> ncMaxConcurrencyDeadline nc
-       , srnChainDbValidateOverride     = ncValidateDB nc
-       , srnSnapshotInterval            = ncSnapshotInterval nc
-       , srnDatabasePath                = dbPath
-       , srnDiffusionArguments          = diffusionArguments
-       , srnDiffusionTracers            = diffusionTracers
-       , srnEnableInDevelopmentVersions = ncTestEnableDevelopmentNetworkProtocols nc
-       , srnTraceChainDB                = chainDBTracer nodeTracers
+       { srnBfcMaxConcurrencyBulkSync    = unMaxConcurrencyBulkSync <$> ncMaxConcurrencyBulkSync nc
+       , srnBfcMaxConcurrencyDeadline    = unMaxConcurrencyDeadline <$> ncMaxConcurrencyDeadline nc
+       , srnChainDbValidateOverride      = ncValidateDB nc
+       , srnSnapshotInterval             = ncSnapshotInterval nc
+       , srnDatabasePath                 = dbPath
+       , srnDiffusionArguments           = diffusionArguments
+       , srnDiffusionTracers             = diffusionTracers
+       , srnEnableInDevelopmentVersions  = ncTestEnableDevelopmentNetworkProtocols nc
+       , srnTraceChainDB                 = chainDBTracer nodeTracers
+       , srnMaybeMempoolCapacityOverride = Just (MempoolCapacityBytesOverride (MempoolCapacityBytes 1000))
        }
  where
   createDiffusionTracers :: Tracers RemoteConnectionId LocalConnectionId blk
