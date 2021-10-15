@@ -39,6 +39,7 @@ module Gen.Cardano.Api.Typed
   , genStakeAddress
   , genTx
   , genTxBody
+  , genTxBody'
   , genTxBodyContent
   , genValue
   , genValueDefault
@@ -558,6 +559,13 @@ genTxBody era = do
   case res of
     Left err -> fail (displayError err)
     Right txBody -> pure txBody
+
+genTxBody' :: IsCardanoEra era => CardanoEra era -> Gen (TxBodyContent BuildTx era, TxBody era)
+genTxBody' era = do
+  content <- genTxBodyContent era
+  case makeTransactionBody content of
+    Left err -> fail (displayError err)
+    Right txBody -> pure (content, txBody)
 
 genTxScriptValidity :: CardanoEra era -> Gen (TxScriptValidity era)
 genTxScriptValidity era = case txScriptValiditySupportedInCardanoEra era of

@@ -8,14 +8,14 @@ module Test.Cardano.Api.TxBody (tests) where
 
 import           Cardano.Prelude
 
-import           Hedgehog (forAll, property, tripping)
+import           Hedgehog (annotateShow, forAll, property, tripping)
 import           Test.Tasty (TestTree, testGroup)
 import           Test.Tasty.Hedgehog (testProperty)
 import           Test.Tasty.TH (testGroupGenerator)
 
 import           Cardano.Api
 
-import           Gen.Cardano.Api.Typed (genTxBody, genTxBodyContent)
+import           Gen.Cardano.Api.Typed (genTxBody', genTxBodyContent)
 
 
 -- * Properties
@@ -53,7 +53,8 @@ test_roundtrip_TxBody_get_make :: [TestTree]
 test_roundtrip_TxBody_get_make =
   [ testProperty (show era) $
     property $ do
-      txbody <- forAll $ genTxBody era
+      (preContent, txbody) <- forAll $ genTxBody' era
+      annotateShow preContent
       tripping
         txbody
         (\(TxBody content) -> content)
@@ -186,7 +187,6 @@ viewBodyContent body =
     { txAuxScripts = txAuxScripts body
     , txCertificates = viewCertificates $ txCertificates body
     , txExtraKeyWits = txExtraKeyWits body
-    , txExtraScriptData = ViewTx
     , txFee = txFee body
     , txIns = map viewTxIn $ txIns body
     , txInsCollateral = txInsCollateral body
@@ -236,7 +236,6 @@ buildBodyContent body =
     { txAuxScripts = txAuxScripts body
     , txCertificates = buildCertificates $ txCertificates body
     , txExtraKeyWits = txExtraKeyWits body
-    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txFee = txFee body
     , txIns = map buildTxIn $ txIns body
     , txInsCollateral = txInsCollateral body

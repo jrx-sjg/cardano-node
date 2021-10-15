@@ -1338,7 +1338,7 @@ data TxBodyContent build era =
        txMetadata       :: TxMetadataInEra era,
        txAuxScripts     :: TxAuxScripts era,
        txExtraKeyWits   :: TxExtraKeyWitnesses era,
-       txProtocolParams :: BuildTxWith build (Maybe ProtocolParameters),
+       txProtocolParams :: Maybe ProtocolParameters,
        txWithdrawals    :: TxWithdrawals  build era,
        txCertificates   :: TxCertificates build era,
        txUpdateProposal :: TxUpdateProposal era,
