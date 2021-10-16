@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+GIT_COMMIT_TO_BUILD=1.30.1 # can be a tag/branch
+BINARIES_OUTPUT_DIR=${HOME}/.local/bin && mkdir -p ${BINARIES_OUTPUT_DIR}
+
+# Install nix
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+# Clone source repository
+git clone https://github.com/input-output-hk/cardano-node.git
+cd cardano-node
+git checkout ${GIT_COMMIT_TO_BUILD}
+
+# Build using NixOS
+for target in ${BUILD_TARGETS}
+do
+  cp -a \
+    $(nix-build -A ${target} --option binary-caches https://iohk-nix-cache.s3-eu-central-1.amazonaws.com/)/bin/${target} \
+    ${BINARIES_OUTPUT_DIR}/${target}
+done
