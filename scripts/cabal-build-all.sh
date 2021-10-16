@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+su builder
 
 GIT_COMMIT_TO_BUILD=1.30.1 # can be a tag/branch
 BINARIES_OUTPUT_DIR=${HOME}/.local/bin && mkdir -p ${BINARIES_OUTPUT_DIR}
