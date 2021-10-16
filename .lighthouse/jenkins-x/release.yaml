@@ -12,12 +12,10 @@ spec:
         metadata: {}
         stepTemplate:
           env:
-          - name: HOME
-            value: /root
+          - name: BUILD_TARGETS
+            value: "cardano-cli cardano-node"
           - name: ENVIRONMENT
-            value: cardano-node   
-          - name: CABAL_PACKAGES
-            value: "pkg-config bech32 cardano-addresses-cli"       
+            value: cardano-node    
           image: uses:jaraxasoftware/jaraxa-pipeline-catalog/tasks/haskell-cabal/release.yaml@versionStream
           name: ""
           resources:
@@ -33,6 +31,18 @@ spec:
           resources: {}       
         - name: build-cabal-all
           resources: {}
+          script: |
+            #!/usr/bin/env bash
+            BINARIES_OUTPUT_DIR=${HOME}/.local/bin && mkdir -p ${BINARIES_OUTPUT_DIR}            
+            # Install nix
+            sh <(curl -L https://nixos.org/nix/install) --daemon
+            # Build using NixOS
+            for target in ${BUILD_TARGETS}
+            do
+              cp -a \
+                $(nix-build -A ${target} --option binary-caches https://iohk-nix-cache.s3-eu-central-1.amazonaws.com/)/bin/${target} \
+                ${BINARIES_OUTPUT_DIR}/${target}
+            done
         - name: check-registry
           resources: {}
         - name: build-container-build
