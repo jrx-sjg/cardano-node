@@ -4,7 +4,10 @@ GIT_COMMIT_TO_BUILD=1.30.1 # can be a tag/branch
 BINARIES_OUTPUT_DIR=${HOME}/.local/bin && mkdir -p ${BINARIES_OUTPUT_DIR}
 
 # Install nix
-sh <(curl -L https://nixos.org/nix/install)
+curl -L https://nixos.org/nix/install > install-nix.sh 
+chmod +x install-nix.sh 
+./install-nix.sh 
+. ./.nix-profile/etc/profile.d/nix.sh 
 
 # Clone source repository
 git clone https://github.com/input-output-hk/cardano-node.git
